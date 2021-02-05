@@ -13,6 +13,7 @@ set(format_sources
     PARENT_SCOPE)
 
 ly_add_utest(NAME int8   SOURCES types/int8.c)
+ly_add_utest(NAME string SOURCES types/string.c)
 
 ly_add_utest(NAME common SOURCES basic/test_common.c)
 ly_add_utest(NAME set SOURCES basic/test_set.c)
