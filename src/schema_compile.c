@@ -214,7 +214,12 @@ lys_compile_ext(struct lysc_ctx *ctx, struct lysp_ext_instance *ext_p, struct ly
         if (ext->argument) {
             lysc_update_path(ctx, (struct lysc_node *)ext, ext->argument);
         }
-        LY_CHECK_GOTO(ret = ext->def->plugin->compile(ctx, ext_p, ext), cleanup);
+        ret = ext->def->plugin->compile(ctx, ext_p, ext);
+        if (ret == LY_ENOT) {
+            lysc_ext_instance_free(ctx->ctx, ext);
+        }
+        LY_CHECK_GOTO(ret, cleanup);
+
         if (ext->argument) {
             lysc_update_path(ctx, NULL, NULL);
         }
