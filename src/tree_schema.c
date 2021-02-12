@@ -215,12 +215,13 @@ lys_getnext_into_case(const struct lysc_node_case *first_case, const struct lysc
 }
 
 API const struct lysc_node *
-lys_getnext(const struct lysc_node *last, const struct lysc_node *parent, const struct lysc_module *module, uint32_t options)
+lys_getnext_(const struct lysc_node *last, const struct lysc_node *parent, const struct lysc_module *module,
+        const struct lysc_ext_instance *ext, uint32_t options)
 {
     const struct lysc_node *next = NULL;
     ly_bool action_flag = 0, notif_flag = 0;
 
-    LY_CHECK_ARG_RET(NULL, parent || module, NULL);
+    LY_CHECK_ARG_RET(NULL, parent || module || ext, NULL);
 
 next:
     if (!last) {
@@ -232,7 +233,13 @@ next:
             next = last = lysc_node_child(parent);
         } else {
             /* top level data */
-            next = last = module->data;
+            const struct lysc_node *data = NULL;
+            if (ext) {
+                lysc_ext_substmt(ext, LY_STMT_CONTAINER /* matches all nodes */, (void **)&data, NULL);
+            } else {
+                data = module->data;
+            }
+            next = last = data;
         }
         if (!next) {
             /* try to get action or notification */
@@ -259,10 +266,22 @@ repeat:
             goto next;
         } else if (!action_flag) {
             action_flag = 1;
-            next = parent ? (struct lysc_node *)lysc_node_actions(parent) : (struct lysc_node *)module->rpcs;
+            if (ext) {
+                lysc_ext_substmt(ext, LY_STMT_RPC /* matches also actions */, (void **)&next, NULL);
+            } else if (parent) {
+                next = (struct lysc_node *)lysc_node_actions(parent);
+            } else {
+                next = (struct lysc_node *)module->rpcs;
+            }
         } else if (!notif_flag) {
             notif_flag = 1;
-            next = parent ? (struct lysc_node *)lysc_node_notifs(parent) : (struct lysc_node *)module->notifs;
+            if (ext) {
+                lysc_ext_substmt(ext, LY_STMT_NOTIFICATION, (void **)&next, NULL);
+            } else if (parent) {
+                next = (struct lysc_node *)lysc_node_notifs(parent);
+            } else {
+                next = (struct lysc_node *)module->notifs;
+            }
         } else {
             return NULL;
         }
@@ -333,11 +352,23 @@ check:
         goto repeat;
     default:
         /* we should not be here */
-        LOGINT(module ? module->mod->ctx : parent->module->ctx);
+        LOGINT(module ? module->mod->ctx : parent ? parent->module->ctx : ext->module->ctx);
         return NULL;
     }
 
     return next;
+}
+
+API const struct lysc_node *
+lys_getnext(const struct lysc_node *last, const struct lysc_node *parent, const struct lysc_module *module, uint32_t options)
+{
+    return lys_getnext_(last,  parent,  module,  NULL, options);
+}
+
+API const struct lysc_node *
+lys_getnext_ext(const struct lysc_node *last, const struct lysc_node *parent, const struct lysc_ext_instance *ext, uint32_t options)
+{
+    return lys_getnext_(last,  parent,  NULL,  ext, options);
 }
 
 API const struct lysc_node *
