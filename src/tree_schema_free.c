@@ -984,9 +984,11 @@ lys_module_free(struct lys_module *module, void (*private_destructor)(const stru
 }
 
 API void
-lysc_extension_instance_free(struct ly_ctx *ctx, struct lysc_ext_substmt *substmts)
+lysc_extension_instance_substatements_free(struct ly_ctx *ctx, struct lysc_ext_substmt *substmts)
 {
-    for (LY_ARRAY_COUNT_TYPE u = 0; substmts[u].stmt; ++u) {
+    LY_ARRAY_COUNT_TYPE u;
+
+    LY_ARRAY_FOR(substmts, u) {
         if (!substmts[u].storage) {
             continue;
         }
@@ -1009,6 +1011,8 @@ lysc_extension_instance_free(struct ly_ctx *ctx, struct lysc_ext_substmt *substm
                 FREE_ARRAY(ctx, types, lysc_type2_free);
             }
             break;
+        case LY_STMT_DESCRIPTION:
+        case LY_STMT_REFERENCE:
         case LY_STMT_UNITS:
             if (substmts[u].cardinality < LY_STMT_CARD_SOME) {
                 /* single item */
@@ -1051,6 +1055,8 @@ lysc_extension_instance_free(struct ly_ctx *ctx, struct lysc_ext_substmt *substm
             LOGINT(ctx);
         }
     }
+
+    LY_ARRAY_FREE(substmts);
 }
 
 void
