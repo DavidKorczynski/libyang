@@ -256,14 +256,18 @@ struct lyxp_expr;
 enum ly_stmt {
     LY_STMT_NONE = 0,
     LY_STMT_ACTION,             /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node_action *`.
-                                     Note that due to compatibility with `struct lysc_node *`, the compiled actions can be actually
-                                     mixed in the linked list with other ::lysc_node based nodes if the storage is shared. */
+                                     The RPCs/Actions and Notifications are expected in a separated lists than the rest of
+                                     data definition nodes as it is done in generic structures of libyang. */
     LY_STMT_ANYDATA,            /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node *`.
-                                     Note that due to ::lysc_node compatibility the anydata can be actually mixed in
-                                     the linked list with other ::lysc_node based nodes if the storage is shared. */
+                                     Note that due to ::lysc_node compatibility the anydata is expected to be actually
+                                     mixed in the linked list with other ::lysc_node based nodes. The RPCs/Actions and
+                                     Notifications are expected in a separated lists as it is done in generic structures
+                                     of libyang. */
     LY_STMT_ANYXML,             /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node *`.
-                                     Note that due to ::lysc_node compatibility the anyxml can be actually mixed in
-                                     the linked list with other ::lysc_node based nodes if the storage is shared. */
+                                     Note that due to ::lysc_node compatibility the anyxml is expected to be actually
+                                     mixed in the linked list with other ::lysc_node based nodes. The RPCs/Actions and
+                                     Notifications are expected in a separated lists as it is done in generic structures
+                                     of libyang. */
     LY_STMT_ARGUMENT,
     LY_STMT_ARG_TEXT,
     LY_STMT_ARG_VALUE,
@@ -273,15 +277,20 @@ enum ly_stmt {
     LY_STMT_BIT,
     LY_STMT_CASE,               /**< TODO is it possible to compile cases without the parent choice? */
     LY_STMT_CHOICE,             /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node *`.
-                                     Note that due to ::lysc_node compatibility the choice can be actually mixed in
-                                     the linked list with other ::lysc_node based nodes if the storage is shared. */
+                                     Note that due to ::lysc_node compatibility the choice is expected to be actually
+                                     mixed in the linked list with other ::lysc_node based nodes. The RPCs/Actions and
+                                     Notifications are expected in a separated lists as it is done in generic structures
+                                     of libyang. */
     LY_STMT_CONFIG,             /**< in ::lysc_ext_substmt.storage stored as a pointer to `uint16_t`, only cardinality < #LY_STMT_CARD_SOME is allowed */
     LY_STMT_CONTACT,
     LY_STMT_CONTAINER,          /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node *`.
-                                     Note that due to ::lysc_node compatibility the container can be actually mixed in
-                                     the linked list with other ::lysc_node based nodes if the storage is shared. */
+                                     Note that due to ::lysc_node compatibility the container is expected to be actually
+                                     mixed in the linked list with other ::lysc_node based nodes. The RPCs/Actions and
+                                     Notifications are expected in a separated lists as it is done in generic structures
+                                     of libyang. */
     LY_STMT_DEFAULT,
-    LY_STMT_DESCRIPTION,
+    LY_STMT_DESCRIPTION,        /**< in ::lysc_ext_substmt.storage stored as a pointer to `const char *` (cardinality < #LY_STMT_CARD_SOME)
+                                     or as a pointer to a [sized array](@ref sizedarrays) `const char **` */
     LY_STMT_DEVIATE,
     LY_STMT_DEVIATION,
     LY_STMT_ENUM,
@@ -293,18 +302,29 @@ enum ly_stmt {
     LY_STMT_FRACTION_DIGITS,
     LY_STMT_GROUPING,
     LY_STMT_IDENTITY,
-    LY_STMT_IF_FEATURE,         /**< in ::lysc_ext_substmt.storage stored as a pointer to `struct lysc_iffeature` (cardinality < #LY_STMT_CARD_SOME)
-                                     or as a pointer to a [sized array](@ref sizedarrays) `struct lysc_iffeature *` */
+    LY_STMT_IF_FEATURE,         /**< if-feature statements are not compiled, they are evaluated and the parent statement is
+                                     preserved only in case the evaluation of all the if-feature statements is true.
+                                     Therefore there is no storage expected. */
     LY_STMT_IMPORT,
     LY_STMT_INCLUDE,
     LY_STMT_INPUT,
     LY_STMT_KEY,
-    LY_STMT_LEAF,
-    LY_STMT_LEAF_LIST,
+    LY_STMT_LEAF,               /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node *`.
+                                     Note that due to ::lysc_node compatibility the leaf is expected to be actually
+                                     mixed in the linked list with other ::lysc_node based nodes. The RPCs/Actions and
+                                     Notifications are expected in a separated lists as it is done in generic structures
+                                     of libyang. */
+    LY_STMT_LEAF_LIST,          /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node *`.
+                                     Note that due to ::lysc_node compatibility the leaf-list is expected to be actually
+                                     mixed in the linked list with other ::lysc_node based nodes. The RPCs/Actions and
+                                     Notifications are expected in a separated lists as it is done in generic structures
+                                     of libyang. */
     LY_STMT_LENGTH,
     LY_STMT_LIST,               /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node *`.
-                                     Note that due to ::lysc_node compatibility the list can be actually mixed in
-                                     the linked list with other ::lysc_node based nodes if the storage is shared. */
+                                     Note that due to ::lysc_node compatibility the list is expected to be actually
+                                     mixed in the linked list with other ::lysc_node based nodes. The RPCs/Actions and
+                                     Notifications are expected in a separated lists as it is done in generic structures
+                                     of libyang. */
     LY_STMT_MANDATORY,          /**< in ::lysc_ext_substmt.storage stored as a pointer to `uint16_t`, only cardinality < #LY_STMT_CARD_SOME is allowed */
     LY_STMT_MAX_ELEMENTS,
     LY_STMT_MIN_ELEMENTS,
@@ -312,7 +332,9 @@ enum ly_stmt {
     LY_STMT_MODULE,
     LY_STMT_MUST,
     LY_STMT_NAMESPACE,
-    LY_STMT_NOTIFICATION,
+    LY_STMT_NOTIFICATION,       /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node_notif *`.
+                                     The RPCs/Actions and Notifications are expected in a separated lists than the rest of
+                                     data definition nodes as it is done in generic structures of libyang. */
     LY_STMT_ORDERED_BY,
     LY_STMT_ORGANIZATION,
     LY_STMT_OUTPUT,
@@ -322,14 +344,15 @@ enum ly_stmt {
     LY_STMT_PREFIX,
     LY_STMT_PRESENCE,
     LY_STMT_RANGE,
-    LY_STMT_REFERENCE,
+    LY_STMT_REFERENCE,          /**< in ::lysc_ext_substmt.storage stored as a pointer to `const char *` (cardinality < #LY_STMT_CARD_SOME)
+                                     or as a pointer to a [sized array](@ref sizedarrays) `const char **` */
     LY_STMT_REFINE,
     LY_STMT_REQUIRE_INSTANCE,
     LY_STMT_REVISION,
     LY_STMT_REVISION_DATE,
     LY_STMT_RPC,                /**< in ::lysc_ext_substmt.storage stored as a pointer to linked list of `struct lysc_node_action *`.
-                                     Note that due to compatibility with `struct lysc_node *`, the compiled RPCs can be actually
-                                     mixed in the linked list with other ::lysc_node based nodes if the storage is shared. */
+                                     The RPCs/Actions and Notifications are expected in a separated lists than the rest of
+                                     data definition nodes as it is done in generic structures of libyang. */
     LY_STMT_STATUS,             /**< in ::lysc_ext_substmt.storage stored as a pointer to `uint16_t`, only cardinality < #LY_STMT_CARD_SOME is allowed */
     LY_STMT_SUBMODULE,
     LY_STMT_SYNTAX_SEMICOLON,

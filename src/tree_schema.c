@@ -38,6 +38,7 @@
 #include "parser_internal.h"
 #include "parser_schema.h"
 #include "path.h"
+#include "plugins_exts.h"
 #include "schema_compile.h"
 #include "schema_compile_amend.h"
 #include "schema_features.h"
